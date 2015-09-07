@@ -97,15 +97,20 @@ class InstallVenv(object):
                 self.run_command(['virtualenv', '-q', '--no-site-packages',
                                  self.venv])
             else:
-                self.run_command(['virtualenv', '-q', self.venv])
+                # NOTE(dkalashnik): Add explicit flag to allow to use system
+                # packages
+                self.run_command(['virtualenv', '-q',
+                                  '--system-site-packages', self.venv])
             print('done.')
         else:
             print("venv already exists...")
             pass
 
     def pip_install(self, *args):
+        # NOTE(dkalashnik): Remove --upgrade flag to prevent pip from
+        # using PyPI
         self.run_command(['tools/with_venv.sh',
-                         'pip', 'install', '--upgrade'] + list(args),
+                         'pip', 'install'] + list(args),
                          redirect_output=False)
 
     def install_dependencies(self):
