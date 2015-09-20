@@ -26,6 +26,15 @@ CONF = config.CONF
 class QuotasAdminNegativeTestJSON(base.BaseV2ComputeAdminTest):
     force_tenant_isolation = True
 
+    # NOTE(dkalashnik): Add missing check of os-quota-sets extension
+    # enabled in config
+    @classmethod
+    def skip_checks(cls):
+        super(QuotasAdminNegativeTestJSON, cls).skip_checks()
+        if not test.is_extension_enabled('os-quota-sets', 'compute'):
+            msg = "quotas extension not enabled."
+            raise cls.skipException(msg)
+
     @classmethod
     def setup_clients(cls):
         super(QuotasAdminNegativeTestJSON, cls).setup_clients()

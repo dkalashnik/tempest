@@ -28,6 +28,15 @@ LOG = logging.getLogger(__name__)
 class QuotasAdminTestJSON(base.BaseV2ComputeAdminTest):
     force_tenant_isolation = True
 
+    # NOTE(dkalashnik): Add missing check of os-quota-sets extension
+    # enabled in config
+    @classmethod
+    def skip_checks(cls):
+        super(QuotasAdminTestJSON, cls).skip_checks()
+        if not test.is_extension_enabled('os-quota-sets', 'compute'):
+            msg = "quotas extension not enabled."
+            raise cls.skipException(msg)
+
     def setUp(self):
         # NOTE(mriedem): Avoid conflicts with os-quota-class-sets tests.
         self.useFixture(fixtures.LockFixture('compute_quotas'))
@@ -155,6 +164,15 @@ class QuotasAdminTestJSON(base.BaseV2ComputeAdminTest):
 class QuotaClassesAdminTestJSON(base.BaseV2ComputeAdminTest):
     """Tests the os-quota-class-sets API to update default quotas.
     """
+
+    # NOTE(dkalashnik): Add missing check of os-quota-sets extension
+    # enabled in config
+    @classmethod
+    def skip_checks(cls):
+        super(QuotaClassesAdminTestJSON, cls).skip_checks()
+        if not test.is_extension_enabled('os-quota-sets', 'compute'):
+            msg = "quotas extension not enabled."
+            raise cls.skipException(msg)
 
     def setUp(self):
         # All test cases in this class need to externally lock on doing
