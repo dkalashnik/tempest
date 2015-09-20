@@ -23,6 +23,13 @@ CONF = config.CONF
 
 class VolumeTypesV2Test(base.BaseVolumeAdminTest):
 
+    @classmethod
+    def skip_checks(cls):
+        super(VolumeTypesV2Test, cls).skip_checks()
+        # NOTE(dkalashnik): Add check of enabled multi-backend feature
+        if not CONF.volume_feature_enabled.multi_backend:
+            raise cls.skipException("Cinder multi-backend feature disabled")
+
     def _delete_volume(self, volume_id):
         self.volumes_client.delete_volume(volume_id)
         self.volumes_client.wait_for_resource_deletion(volume_id)
