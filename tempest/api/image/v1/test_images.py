@@ -49,35 +49,38 @@ class CreateRegisterImagesTest(base.BaseV1ImageTest):
         self.assertIn('size', body)
         self.assertEqual(1024, body.get('size'))
 
-    @test.idempotent_id('69da74d9-68a9-404b-9664-ff7164ccb0f5')
-    def test_register_remote_image(self):
-        # Register a new remote image
-        body = self.create_image(name='New Remote Image',
-                                 container_format='bare',
-                                 disk_format='raw', is_public=False,
-                                 location=CONF.image.http_image,
-                                 properties={'key1': 'value1',
-                                             'key2': 'value2'})
-        self.assertIn('id', body)
-        self.assertEqual('New Remote Image', body.get('name'))
-        self.assertFalse(body.get('is_public'))
-        self.assertEqual('active', body.get('status'))
-        properties = body.get('properties')
-        self.assertEqual(properties['key1'], 'value1')
-        self.assertEqual(properties['key2'], 'value2')
+    # NOTE(dkalashnik): Disable test with external source due to it
+    # unavailability on true isolated envs
 
-    @test.idempotent_id('6d0e13a7-515b-460c-b91f-9f4793f09816')
-    def test_register_http_image(self):
-        body = self.create_image(name='New Http Image',
-                                 container_format='bare',
-                                 disk_format='raw', is_public=False,
-                                 copy_from=CONF.image.http_image)
-        self.assertIn('id', body)
-        image_id = body.get('id')
-        self.assertEqual('New Http Image', body.get('name'))
-        self.assertFalse(body.get('is_public'))
-        self.client.wait_for_image_status(image_id, 'active')
-        self.client.show_image(image_id)
+    # @test.idempotent_id('69da74d9-68a9-404b-9664-ff7164ccb0f5')
+    # def test_register_remote_image(self):
+    #     # Register a new remote image
+    #     body = self.create_image(name='New Remote Image',
+    #                              container_format='bare',
+    #                              disk_format='raw', is_public=False,
+    #                              location=CONF.image.http_image,
+    #                              properties={'key1': 'value1',
+    #                                          'key2': 'value2'})
+    #     self.assertIn('id', body)
+    #     self.assertEqual('New Remote Image', body.get('name'))
+    #     self.assertFalse(body.get('is_public'))
+    #     self.assertEqual('active', body.get('status'))
+    #     properties = body.get('properties')
+    #     self.assertEqual(properties['key1'], 'value1')
+    #     self.assertEqual(properties['key2'], 'value2')
+    #
+    # @test.idempotent_id('6d0e13a7-515b-460c-b91f-9f4793f09816')
+    # def test_register_http_image(self):
+    #     body = self.create_image(name='New Http Image',
+    #                              container_format='bare',
+    #                              disk_format='raw', is_public=False,
+    #                              copy_from=CONF.image.http_image)
+    #     self.assertIn('id', body)
+    #     image_id = body.get('id')
+    #     self.assertEqual('New Http Image', body.get('name'))
+    #     self.assertFalse(body.get('is_public'))
+    #     self.client.wait_for_image_status(image_id, 'active')
+    #     self.client.show_image(image_id)
 
     @test.idempotent_id('05b19d55-140c-40d0-b36b-fafd774d421b')
     def test_register_image_with_min_ram(self):
@@ -110,24 +113,31 @@ class ListImagesTest(base.BaseV1ImageTest):
         super(ListImagesTest, cls).resource_setup()
         # We add a few images here to test the listing functionality of
         # the images API
-        img1 = cls._create_remote_image('one', 'bare', 'raw')
-        img2 = cls._create_remote_image('two', 'ami', 'ami')
-        img3 = cls._create_remote_image('dup', 'bare', 'raw')
-        img4 = cls._create_remote_image('dup', 'bare', 'raw')
+
+        # NOTE(dkalashnik): Disable creating of remote images due to source
+        # unavailability on true isolated envs
+        # img1 = cls._create_remote_image('one', 'bare', 'raw')
+        # img2 = cls._create_remote_image('two', 'ami', 'ami')
+        # img3 = cls._create_remote_image('dup', 'bare', 'raw')
+        # img4 = cls._create_remote_image('dup', 'bare', 'raw')
         img5 = cls._create_standard_image('1', 'ami', 'ami', 42)
         img6 = cls._create_standard_image('2', 'ami', 'ami', 142)
-        img7 = cls._create_standard_image('33', 'bare', 'raw', 142)
-        img8 = cls._create_standard_image('33', 'bare', 'raw', 142)
+
+        # NOTE(dkalashnik): Rename image from 33 to dup for test_index_name
+        img7 = cls._create_standard_image('dup', 'bare', 'raw', 142)
+        img8 = cls._create_standard_image('dup', 'bare', 'raw', 142)
         cls.created_set = set(cls.created_images)
         # 5x bare, 3x ami
-        cls.bare_set = set((img1, img3, img4, img7, img8))
-        cls.ami_set = set((img2, img5, img6))
+        # NOTE(dkalashnik): Remove remote images from sets
+        cls.bare_set = set((img7, img8))
+        cls.ami_set = set((img5, img6))
         # 1x with size 42
         cls.size42_set = set((img5,))
         # 3x with size 142
         cls.size142_set = set((img6, img7, img8,))
         # dup named
-        cls.dup_set = set((img3, img4))
+        # NOTE(dkalashnik): Change dup set images from remote to standard
+        cls.dup_set = set((img7, img8))
 
     @classmethod
     def _create_remote_image(cls, name, container_format, disk_format):
@@ -222,12 +232,14 @@ class ListImagesTest(base.BaseV1ImageTest):
 
     @test.idempotent_id('097af10a-bae8-4342-bff4-edf89969ed2a')
     def test_index_name(self):
+        # NOTE(dkalashnik): Change dup set images from remote to standard
         images_list = self.client.list_images(
             detail=True,
-            name='New Remote Image dup')['images']
+            name='New Standard Image dup')['images']
         result_set = set(map(lambda x: x['id'], images_list))
         for image in images_list:
-            self.assertEqual(image['name'], 'New Remote Image dup')
+            # NOTE(dkalashnik): Change dup set images from remote to standard
+            self.assertEqual(image['name'], 'New Standard Image dup')
         self.assertTrue(self.dup_set <= result_set)
         self.assertFalse(self.created_set - self.dup_set <= result_set)
 
