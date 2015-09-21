@@ -51,22 +51,3 @@ resources:
       key_name: {get_param: KeyName}
       networks:
       - network: {get_resource: Network}
-      user_data_format: RAW
-      user_data:
-        str_replace:
-          template: |
-            #!/bin/sh -v
-
-            SIGNAL_DATA='{"Status": "SUCCESS", "Reason": "SmokeServerNeutron created", "Data": "Application has completed configuration.", "UniqueId": "00000"}'
-            while ! curl --fail -X PUT -H 'Content-Type:' --data-binary "$SIGNAL_DATA" \
-            'wait_handle' ; do sleep 3; done
-          params:
-            wait_handle: {get_resource: WaitHandleNeutron}
-  WaitHandleNeutron:
-    type: AWS::CloudFormation::WaitConditionHandle
-  WaitCondition:
-    type: AWS::CloudFormation::WaitCondition
-    depends_on: Server
-    properties:
-      Handle: {get_resource: WaitHandleNeutron}
-      Timeout: {get_param: timeout}

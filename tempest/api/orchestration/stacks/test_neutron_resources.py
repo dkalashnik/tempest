@@ -48,6 +48,34 @@ class NeutronResourcesTestJSON(base.BaseOrchestrationTest):
     @classmethod
     def resource_setup(cls):
         super(NeutronResourcesTestJSON, cls).resource_setup()
+
+        # NOTE(dkalashnik): Next fragment was removed from template due to
+        # unavailability of management network from instance:
+        #       user_data_format: RAW
+        #       user_data:
+        #         str_replace:
+        #           template: |
+        #             #!/bin/sh -v
+        #
+        #             SIGNAL_DATA='{"Status": "SUCCESS", \
+        #                           "Reason": "SmokeServerNeutron created", \
+        #                           "Data": "Application has completed \
+        #                                    configuration.", \
+        #                           "UniqueId": "00000"}'
+        #             while ! curl --fail -X PUT -H 'Content-Type:' \
+        #                 --data-binary "$SIGNAL_DATA" \
+        #             'wait_handle' ; do sleep 3; done
+        #           params:
+        #             wait_handle: {get_resource: WaitHandleNeutron}
+        #   WaitHandleNeutron:
+        #     type: AWS::CloudFormation::WaitConditionHandle
+        #   WaitCondition:
+        #     type: AWS::CloudFormation::WaitCondition
+        #     depends_on: Server
+        #     properties:
+        #       Handle: {get_resource: WaitHandleNeutron}
+        #       Timeout: {get_param: timeout}
+
         cls.neutron_basic_template = cls.load_template('neutron_basic')
         cls.stack_name = data_utils.rand_name('heat')
         template = cls.read_template('neutron_basic')
